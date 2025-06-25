@@ -1,0 +1,5 @@
+__pycache__/
+data/chroma/*
+data/feeds/*
+data/sqlite/*
+!.gitignore
