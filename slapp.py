@@ -1,8 +1,8 @@
 # Setup RagFeed
 from RagFeed import RagFeed
-import streamlit as st
-
 ragfeed = RagFeed()
+
+import streamlit as st
 
 with st.sidebar:
     openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")

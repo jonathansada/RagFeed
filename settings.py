@@ -1,3 +1,7 @@
+# Logger
+logger_path = "./log/ragfeed.log"
+logger_level = 10# https://docs.python.org/3/library/logging.html#logging-levels
+
 # Feeds
 feeds_path = "./data/feeds"
 feeds_update_freq = 12 # hours
@@ -13,5 +17,5 @@ sqlite_path = "./data/sqlite/ragfeed.db"
 # Models
 model_source = "ollama"
 ollama_url = "http://localhost:11434/"
-ollama_llm = ""
+ollama_llm = "llama3.1:8b"
 ollama_embeddings = "snowflake-arctic-embed2"

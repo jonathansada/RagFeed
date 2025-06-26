@@ -2,8 +2,9 @@ import os
 import pathlib
 import logging
 
-from langchain_community.document_loaders.xml import UnstructuredXMLLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
+from bs4 import BeautifulSoup
 
 # Import Settings
 from settings import *
@@ -13,8 +14,9 @@ class RagFeed:
     # Initializes application based on the settings
     def __init__(self):
         # Logger
-        logging.basicConfig(filename='./log/ragfeed.log', encoding='utf-8', level=logging.DEBUG)
-        self.log = logging
+        self.log = logging.getLogger(logger_path)
+        self.log.setLevel(logger_level)
+        self.log.addHandler(logging.FileHandler(logger_path, 'w'))
 
         # Initialize DB
         if database_engine == "sqlite":
@@ -37,7 +39,7 @@ class RagFeed:
         # Prepare ChromaDB
         if vector_store_engine == "chroma":
             from src.chromaVectorStore import ChromaVectorStore
-            self.vectorstore = ChromaVectorStore(embeddings=self.model.getEmbeddings(), collection_name=chromadb_collection, persist_directory=chromadb_path, log=self.log)
+            self.vectorstore = ChromaVectorStore(embeddings=self.model.embeddings, collection_name=chromadb_collection, persist_directory=chromadb_path, log=self.log)
         else:
             error = f"database_engine '{vector_db}' is not implemented"
             self.log.error(error)
@@ -46,8 +48,9 @@ class RagFeed:
         # Get Sources
         from src.sources import Sources
         self.sources = Sources(db = self.database, log=self.log, update_feq = feeds_update_freq)
-
-        self.updateVectorStore()
+        
+        # Update sources 
+        #self.updateVectorStore()
     
     # Reads the RSS stored in the feeds folder and update vectorstore
     def updateVectorStore(self):
@@ -57,11 +60,33 @@ class RagFeed:
         for file in os.listdir(feeds_path):
             if pathlib.Path(file).suffix.lower() == ".xml":
                 self.log.debug(f"Adding file {file} in vector store")
-                xmlLoader = UnstructuredXMLLoader(file_path = feeds_path + "/" + file, mode = "elements")
-                docs = self.vectorstore.document_preprocess(xmlLoader.load())
+                docs = self.rssLoader(xml_file = feeds_path + "/" + file)
                 chunks = text_splitter.split_documents(docs)
                 self.vectorstore.add_documents(documents=chunks)
                 self.log.debug(f"Added {len(chunks)} chunks")
+
+    def rssLoader(self, xml_file):
+        with open(xml_file) as f:
+            soup = BeautifulSoup(f, 'xml')
+
+        docs = []         
+        for item in soup.find_all('item'):
+            metadata = {}
+            metadata["url"] = item.link.text
+            if item.creator:
+                metadata["creator"] = item.creator.text
+            if item.pubDate:
+                metadata["publication"] = item.pubDate.text
+            if item.category:
+                metadata["categories"] = ", ".join([cat.text for cat in item.find_all('category')])
+            if item.credit:
+                metadata["credit"] = item.credit.text
+
+            docs.append(Document(
+                page_content=f"{item.title.text}\n{"\n".join([desc.text for desc in item.find_all('description')])}",
+                metadata=metadata
+            ))
+        return docs
 
     # Updates the rss and 
     def updateSources(self):
@@ -71,4 +96,58 @@ class RagFeed:
 
     def searchRelated(self, search, num_docs=10):
         self.log.debug("RagFeed.searchRelated()")
-        return self.vectorstore.search(search, k = num_docs) 
+        #return self.vectorstore.search(search, k = num_docs) 
+
+        messages = [('user', self.get_prompt(search, self.vectorstore.search(search, k = num_docs)))]
+        completion = self.model.chat.invoke(messages)
+
+        return completion.content
+
+    def get_prompt(self, question, docs):
+        context = ""
+        for doc in docs:
+            context += "\nContent:\n"
+            context += doc.page_content + "\n"
+            context += str(doc.metadata) +"\n\n"
+
+        return f"""## SYSTEM ROLE
+                You are a chatbot designed to summarize and classify articles comming from RSS sources.
+                Your answers must be based exclusively on provided content.
+
+                ## USER QUESTION
+                The user has asked:
+                "{question}"
+
+                ## CONTEXT
+                Here is the relevant content from the RSS Sources:
+                '''
+                {context}
+                '''
+
+                ## GUIDELINES
+                1. **Accuracy**:
+                - Only use the content in the `CONTEXT` section to answer.
+                - If the answer cannot be found, explicitly state: "The provided context does not contain this information."
+
+                2. **Transparency**:
+                - Reference the articles title and url (in context) when providing information.
+                - Do not speculate or provide opinions.
+
+                3. **Clarity**:
+                - Use simple, professional, and concise language.
+                - Format your response in Markdown for readability.
+
+                ## TASK
+                1. Provide a summary of the relevant information in context related to user's question.
+                2. Point the user to relevant parts of the articles in context.
+                3. Provide the response in the following format:
+
+                ## RESPONSE FORMAT
+                '''
+                # [Headline sumarizing the topic]
+                [Brief summary of the events, clear text, use bulletpoints when possible]
+
+                **Source**:
+                • [[Title]([url])]
+                '''
+                """

@@ -1,4 +1,7 @@
 from RagFeed import RagFeed
 app = RagFeed()
-app.updateSources()
 
+#app.updateVectorStore()
+
+result = app.searchRelated("Spain")
+print(result)
