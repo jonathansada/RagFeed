@@ -2,7 +2,9 @@ from langchain_chroma import Chroma
 from langchain_community.vectorstores.utils import filter_complex_metadata
 
 class ChromaVectorStore():
-    def __init__(self, embeddings, collection_name, persist_directory):
+    def __init__(self, embeddings, collection_name, persist_directory, log):
+        self.log = log
+        self.log.debug("ChromaVectorStore.__init__()")
         self.vectorstore = Chroma(collection_name=collection_name, embedding_function=embeddings, persist_directory=persist_directory)
 
     def document_preprocess(self, document):

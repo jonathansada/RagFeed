@@ -1,5 +1,6 @@
 # Feeds
 feeds_path = "./data/feeds"
+feeds_update_freq = 12 # hours
 
 # Databases
 vector_store_engine = "chroma"

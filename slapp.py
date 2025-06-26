@@ -1,7 +1,8 @@
 # Setup RagFeed
-from init import *
-
+from RagFeed import RagFeed
 import streamlit as st
+
+ragfeed = RagFeed()
 
 with st.sidebar:
     openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
@@ -11,8 +12,8 @@ with st.sidebar:
 st.title("RagFeed")
 st.caption("...")
 if "messages" not in st.session_state:
-    retrieved_docs = vectorstore.search("What are the top 10 most relevant topics for today?", k=10) 
-    for doc in retrieved_docs:
+    docs = ragfeed.searchRelated("What are the top 10 most relevant topics for today?")
+    for doc in docs:
         st.session_state["messages"] = [{"role": "assistant", "content": doc}]
 
 for msg in st.session_state.messages:
