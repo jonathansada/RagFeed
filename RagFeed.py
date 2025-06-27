@@ -2,9 +2,8 @@ import os
 import pathlib
 import logging
 
+from src.rssDocumentrLoader import RssDocumentLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_core.documents import Document
-from bs4 import BeautifulSoup
 
 # Import Settings
 from settings import *
@@ -55,99 +54,52 @@ class RagFeed:
     # Reads the RSS stored in the feeds folder and update vectorstore
     def updateVectorStore(self):
         # Load XML into VectorStore
-        self.log.debug("RagFeed.updateVectorStore()")
+        self.log.info("RagFeed.updateVectorStore()")
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        rssLoader = RssDocumentLoader()
         for file in os.listdir(feeds_path):
             if pathlib.Path(file).suffix.lower() == ".xml":
                 self.log.debug(f"Adding file {file} in vector store")
-                docs = self.rssLoader(xml_file = feeds_path + "/" + file)
+                docs = rssLoader.load(xml_file = feeds_path + "/" + file)
                 chunks = text_splitter.split_documents(docs)
                 self.vectorstore.add_documents(documents=chunks)
                 self.log.debug(f"Added {len(chunks)} chunks")
 
-    def rssLoader(self, xml_file):
-        with open(xml_file) as f:
-            soup = BeautifulSoup(f, 'xml')
-
-        docs = []         
-        for item in soup.find_all('item'):
-            metadata = {}
-            metadata["url"] = item.link.text
-            if item.creator:
-                metadata["creator"] = item.creator.text
-            if item.pubDate:
-                metadata["publication"] = item.pubDate.text
-            if item.category:
-                metadata["categories"] = ", ".join([cat.text for cat in item.find_all('category')])
-            if item.credit:
-                metadata["credit"] = item.credit.text
-
-            docs.append(Document(
-                page_content=f"{item.title.text}\n{"\n".join([desc.text for desc in item.find_all('description')])}",
-                metadata=metadata
-            ))
-        return docs
-
     # Updates the rss and 
     def updateSources(self):
-        self.log.debug("RagFeed.updateSources()")
+        self.log.info("RagFeed.updateSources()")
         if self.sources.updateArticles() > 0:
             self.updateVectorStore()
 
-    def searchRelated(self, search, num_docs=10):
-        self.log.debug("RagFeed.searchRelated()")
-        #return self.vectorstore.search(search, k = num_docs) 
+    def askRag(self, search, num_docs=10):
+        self.log.info("RagFeed.askRag()")
 
-        messages = [('user', self.get_prompt(search, self.vectorstore.search(search, k = num_docs)))]
-        completion = self.model.chat.invoke(messages)
-
-        return completion.content
-
-    def get_prompt(self, question, docs):
+        # Get docs from vectorstore
+        docs = self.vectorstore.search(search, k = num_docs)
+        
+        # Prepare contextx
         context = ""
         for doc in docs:
             context += "\nContent:\n"
             context += doc.page_content + "\n"
             context += str(doc.metadata) +"\n\n"
 
-        return f"""## SYSTEM ROLE
-                You are a chatbot designed to summarize and classify articles comming from RSS sources.
-                Your answers must be based exclusively on provided content.
+        # Ask the model to perform the inference
+        result = self.model.summarizeArticles(question=search, context=context)
 
-                ## USER QUESTION
-                The user has asked:
-                "{question}"
+        return result
 
-                ## CONTEXT
-                Here is the relevant content from the RSS Sources:
-                '''
-                {context}
-                '''
+    def getTopTopics(self):
+        self.log.info("RagFeed.getTopTopics()")
+        
+        docs = []    
+        from bs4 import BeautifulSoup
+        for file in os.listdir(feeds_path):
+            if pathlib.Path(file).suffix.lower() == ".xml":
+                with open(feeds_path + "/" + file) as f:
+                    soup = BeautifulSoup(f, 'xml')
+                
+                for item in soup.find_all('item'):
+                    docs.append({"title": item.title.text, "link": item.link.text})
 
-                ## GUIDELINES
-                1. **Accuracy**:
-                - Only use the content in the `CONTEXT` section to answer.
-                - If the answer cannot be found, explicitly state: "The provided context does not contain this information."
-
-                2. **Transparency**:
-                - Reference the articles title and url (in context) when providing information.
-                - Do not speculate or provide opinions.
-
-                3. **Clarity**:
-                - Use simple, professional, and concise language.
-                - Format your response in Markdown for readability.
-
-                ## TASK
-                1. Provide a summary of the relevant information in context related to user's question.
-                2. Point the user to relevant parts of the articles in context.
-                3. Provide the response in the following format:
-
-                ## RESPONSE FORMAT
-                '''
-                # [Headline sumarizing the topic]
-                [Brief summary of the events, clear text, use bulletpoints when possible]
-
-                **Source**:
-                • [[Title]([url])]
-                '''
-                """
+        return self.model.getTopTopics(docs)

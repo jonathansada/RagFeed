@@ -17,5 +17,5 @@ sqlite_path = "./data/sqlite/ragfeed.db"
 # Models
 model_source = "ollama"
 ollama_url = "http://localhost:11434/"
-ollama_llm = "llama3.1:8b"
+ollama_llm = "llama3.2:3b"
 ollama_embeddings = "snowflake-arctic-embed2"

@@ -12,7 +12,7 @@ with st.sidebar:
 st.title("RagFeed")
 st.caption("...")
 if "messages" not in st.session_state:
-    docs = ragfeed.searchRelated("What are the top 10 most relevant topics for today?")
+    docs = ragfeed.askRag("What are the top 10 most relevant topics for today?")
     for doc in docs:
         st.session_state["messages"] = [{"role": "assistant", "content": doc}]
 
