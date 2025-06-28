@@ -111,6 +111,20 @@ class SqliteDatabase:
         if closedb:
             self.closeCon()
 
+    def getArticles(self):
+        self.log.info(f"SqliteDatabase.getArticles()")
+
+        self.openCon()
+        result = self.cur.execute("SELECT * FROM articles ORDER BY pub_date ASC")
+        cols = self.cur.description
+        rows = self.cur.fetchall()
+        self.closeCon()
+
+        result = self.rowsToDict(rows, cols)
+        self.log.debug(f"result: {str(result)}")
+        
+        return result
+
     def getTodayArticles(self):
         self.log.info(f"SqliteDatabase.getTodayArticles()")
 

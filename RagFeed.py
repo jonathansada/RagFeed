@@ -47,7 +47,7 @@ class RagFeed:
         
         # Update sources 
         self.updateSources()
-    
+
     # Updates the rss and 
     def updateSources(self):
         self.log.info("RagFeed.updateSources()")
@@ -78,3 +78,11 @@ class RagFeed:
         articles = self.database.getTodayArticles()
         result = self.model.getTopTopics([{"title": article["title"], "link":article["link"]} for article in articles])
         return result
+
+    def getSources(self):
+        self.log.info("RagFeed.getSources()")
+        return self.database.getSources()
+
+    def getArticles(self):
+        self.log.info("RagFeed.getArticles()")
+        return self.database.getArticles()
