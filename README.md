@@ -12,6 +12,8 @@ Other posible features (future) is to allow the user to rate specific articles i
     `cd RagFeed`
 2. Install depencies 
     `pip install -r requirements.txt`
+3. Create SQLite Database
+    `sqlite3 ./data/sqlite/ragfeed.db < ./db/ragfeed_schema.sql`
 3. Run App
     `python -m streamlit run slapp.py`
 4. Access through the provided url

@@ -13,11 +13,20 @@ class ChromaVectorStore():
 
         return filter_complex_metadata(document)
 
-    def add_documents(self, documents):
+    def add_documents(self, documents, ids):
         self.log.info("ChromaVectorStore.add_documents()")
         self.log.debug("Documents: " + str(documents))
+        
+        # Rudimentary way to avoid duplications
+        repeated_ids = self.vectorstore.get(ids)["ids"]
+        if repeated_ids:
+            self.log.debug("deleting documents with ids: " + str(repeated_ids))
+            self.vectorstore.delete(ids=repeated_ids)
 
-        self.vectorstore.add_documents(documents=documents)
+        result = self.vectorstore.add_documents(documents=documents, ids = ids)
+        self.log.debug("Documents added to vectorstore: " + str(result))
+
+        return result
 
     def search(self, term, k=1):
         self.log.info("ChromaVectorStore.search()")

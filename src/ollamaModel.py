@@ -34,7 +34,7 @@ class OllamaModel():
                     - If the answer cannot be found, explicitly state: "The provided context does not contain this information."
 
                     2. **Transparency**:
-                    - Reference the articles title and url (in context) when providing information.
+                    - Reference the articles title and link (in context) when providing information.
                     - Do not speculate or provide opinions.
 
                     3. **Clarity**:
@@ -52,7 +52,7 @@ class OllamaModel():
                     [Brief summary of the events, clear text, use bulletpoints when possible]
 
                     **Source**:
-                    • [[Title]([url])]
+                    • [[Title]([link])]
                     '''
                     """
 
@@ -68,7 +68,7 @@ class OllamaModel():
         result_format = """
             [{"topic": "[Write a headline that sumarizes the articles in the topic]",
              "articles": [{"article": "[article headline in context related to the topic]",
-                           "link": "[article url in context]"]}]"""
+                           "link": "[article link in context]"]}]"""
         prompt = f"""## SYSTEM ROLE
                     You are a chatbot designed to identify and group the most relevant topics on a list of articles headlines.
                     Your answers must be based exclusively on provided content.

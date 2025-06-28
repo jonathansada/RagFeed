@@ -3,7 +3,6 @@ logger_path = "./log/ragfeed.log"
 logger_level = 10# https://docs.python.org/3/library/logging.html#logging-levels
 
 # Feeds
-feeds_path = "./data/feeds"
 feeds_update_freq = 12 # hours
 
 # Databases
