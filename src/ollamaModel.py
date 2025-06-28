@@ -93,7 +93,7 @@ class OllamaModel():
                     1. Provide a list of the topics in the provided context
                     2. The list must be order based on relevancy (most frequent topics first)
                     3. Returno only a JSON without any extra comment.
-                    3. Provide the response in the following format:
+                    4. Provide the response in the following format:
                     {result_format}
                     """
 

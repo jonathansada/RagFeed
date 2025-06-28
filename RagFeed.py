@@ -62,7 +62,7 @@ class RagFeed:
                 self.log.debug(f"Adding file {file} in vector store")
                 docs = rssLoader.load(xml_file = feeds_path + "/" + file)
                 chunks = text_splitter.split_documents(docs)
-                self.vectorstore.add_documents(documents=chunks)
+                #self.vectorstore.add_documents(documents=chunks)
                 self.log.debug(f"Added {len(chunks)} chunks")
 
     # Updates the rss and 
