@@ -1,6 +1,7 @@
 import os
 import pathlib
 import logging
+import json
 
 # Import Settings
 from settings import *
@@ -50,13 +51,13 @@ class RagFeed:
 
     # Updates the rss and 
     def updateSources(self):
-        self.log.info("RagFeed.updateSources()")
+        self.log.info("\nRagFeed.updateSources()")
         sourcesUpdated = self.sources.updateSources()
         if sourcesUpdated:
             self.sources.updateVectorStore()
 
     def askRag(self, search, num_docs=10):
-        self.log.info("RagFeed.askRag()")
+        self.log.info("\nRagFeed.askRag()")
 
         # Get docs from vectorstore
         docs = self.vectorstore.search(search, k = num_docs)
@@ -71,18 +72,32 @@ class RagFeed:
         # Ask the model to perform the inference
         result = self.model.summarizeArticles(question=search, context=context)
 
-        return result
+        return result  
+
+    def updateTopTopics(self):
+        articles = self.database.getTodayArticles()
+        completition, tokBasePrompt, tokInput, tolAnswer = self.model.getTopTopics([{"title": article["title"], "description": article["description"], "categories": article["categories"], "link": article["link"]} for article in articles])
+        self.database.setTopicsCache(completition, tokBasePrompt, tokInput, tolAnswer)
+
+    def hastTagFromText(self, text):
+        s = text.replace("-", " ").replace("_", " ")
+        s = s.split()
+        if len(text) == 0:
+            return text
+        return "#"+s[0] + ''.join(i.capitalize() for i in s[1:])
 
     def getTopTopics(self):
-        self.log.info("RagFeed.getTopTopics()")
-        articles = self.database.getTodayArticles()
-        result = self.model.getTopTopics([{"title": article["title"], "link":article["link"]} for article in articles])
-        return result
+        self.log.info("\nRagFeed.getTopTopics()")
+        topics = self.database.getTopicsCache()
+        if len(topics) == 0:
+            return []
+
+        return {self.hastTagFromText(topic["topic"]):topic for topic in json.loads(topics[0]["completition"])}
 
     def getSources(self):
-        self.log.info("RagFeed.getSources()")
+        self.log.info("\nRagFeed.getSources()")
         return self.database.getSources()
 
     def getArticles(self):
-        self.log.info("RagFeed.getArticles()")
+        self.log.info("\nRagFeed.getArticles()")
         return self.database.getArticles()

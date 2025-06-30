@@ -19,7 +19,7 @@ class Sources:
         return self.db.getSources()
     
     def updateSources(self):
-        self.log.info("Sources.updateArticles()")
+        self.log.info("\nSources.updateArticles()")
         sources = self.getSources()
         updated = []
         for source in sources:
@@ -37,7 +37,7 @@ class Sources:
         return updated
     
     def updateArticles(self, source, content):
-        self.log.info("Sources.updateArticles()")
+        self.log.info("\nSources.updateArticles()")
         self.log.debug("Soruce:  " + str(source))
         self.log.debug("Content: " + str(content))
 
@@ -55,7 +55,7 @@ class Sources:
         self.db.closeCon()
 
     def updateVectorStore(self):
-        self.log.info("Sources.updateVectorStore()")
+        self.log.info("\nSources.updateVectorStore()")
              
         articles = self.db.getArticlesForVectorStore()
         documents = []

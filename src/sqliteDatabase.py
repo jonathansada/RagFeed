@@ -10,19 +10,19 @@ class SqliteDatabase:
 
     def openCon(self):
         if self.con == False:
-            self.log.info(f"SqliteDatabase.openCon({self.db_path})")
+            self.log.info(f"\nSqliteDatabase.openCon({self.db_path})")
             self.con = sqlite3.connect(self.db_path)
             self.cur = self.con.cursor()
     
     def closeCon(self):
         if self.con != False:
-            self.log.info(f"SqliteDatabase.closeCon()")
+            self.log.info(f"\nSqliteDatabase.closeCon()")
             self.con.close()
             self.con = False
             self.cur = False
 
     def getSources(self):
-        self.log.info(f"SqliteDatabase.getSources()")
+        self.log.info(f"\nSqliteDatabase.getSources()")
         
         self.openCon()
         self.cur.execute("SELECT id, title, url, last_update FROM sources")
@@ -35,7 +35,7 @@ class SqliteDatabase:
         return result
 
     def setSourceLastUpdate(self, source:int, last_update:datetime = datetime.now(), closedb = True):
-        self.log.info(f"SqliteDatabase.setSourceLastUpdate()")
+        self.log.info(f"\nSqliteDatabase.setSourceLastUpdate()")
         self.log.debug(f"source={source}\nlast_update={datetime}")
 
         self.openCon()
@@ -46,7 +46,7 @@ class SqliteDatabase:
             self.closeCon()
 
     def addArticle(self, source_id, article, closedb = True):
-        self.log.info(f"SqliteDatabase.addArticle()")
+        self.log.info(f"\nSqliteDatabase.addArticle()")
         self.log.debug(f"source_id: {str(source_id)}")
         self.log.debug(f"article: {str(article)}")
 
@@ -73,7 +73,7 @@ class SqliteDatabase:
         return row_id
     
     def getArticleId(self, link, closedb = True):
-        self.log.info(f"SqliteDatabase.getArticleId()")
+        self.log.info(f"\nSqliteDatabase.getArticleId()")
         self.log.debug(f"link: {link}")
 
         self.openCon()
@@ -87,7 +87,7 @@ class SqliteDatabase:
         return rows[0][0] if rows else False
 
     def getArticlesForVectorStore(self):
-        self.log.info(f"SqliteDatabase.getSources()")
+        self.log.info(f"\nSqliteDatabase.getSources()")
         
         self.openCon()
         self.cur.execute("SELECT * FROM articles WHERE in_vectorstore = 0")
@@ -101,9 +101,8 @@ class SqliteDatabase:
         return result
     
     def setArticleInVectorStore(self, article_id, closedb = True):
-        self.log.info(f"SqliteDatabase.setArticleInVectorStore()")
-        self.log.debug(f"article_id={article_id}")
-
+        self.log.info(f"\nSqliteDatabase.setArticleInVectorStore()")
+        
         self.openCon()
         result = self.cur.execute("UPDATE articles SET in_vectorstore=1 WHERE id=?", [article_id])
         self.log.debug(f"result: {str(result)}")
@@ -112,7 +111,7 @@ class SqliteDatabase:
             self.closeCon()
 
     def getArticles(self):
-        self.log.info(f"SqliteDatabase.getArticles()")
+        self.log.info(f"\nSqliteDatabase.getArticles()")
 
         self.openCon()
         result = self.cur.execute("SELECT * FROM articles ORDER BY pub_date ASC")
@@ -126,9 +125,10 @@ class SqliteDatabase:
         return result
 
     def getTodayArticles(self):
-        self.log.info(f"SqliteDatabase.getTodayArticles()")
+        self.log.info(f"\nSqliteDatabase.getTodayArticles()")
 
         self.openCon()
+        print(f"SELECT * FROM articles WHERE pub_date>={self.timestampToDbData(datetime.now() + timedelta(hours=-24))} ORDER BY pub_date ASC")
         result = self.cur.execute("SELECT * FROM articles WHERE pub_date>=? ORDER BY pub_date ASC", [self.timestampToDbData(datetime.now() + timedelta(hours=-24))])
         cols = self.cur.description
         rows = self.cur.fetchall()
@@ -139,6 +139,29 @@ class SqliteDatabase:
         
         return result
 
+    def setTopicsCache(self, completition, numTokensPrompt, numTokensInput, numTokensCompletition):
+        self.log.info(f"\nSqliteDatabase.setTopicsCache()")
+        self.log.debug(f"completition={completition}, numTokensPrompt={numTokensPrompt}, numTokensInput={numTokensInput}, numTokensCompletition={numTokensCompletition}")
+
+        self.openCon()
+        self.cur.execute("INSERT INTO topics_cache (completition, num_tokens_prompt, num_tokens_input, num_tokens_completition, date_completition) values (?, ?, ?, ?, ?)",
+                         [completition, numTokensPrompt, numTokensInput, numTokensCompletition, self.timestampToDbData(datetime.now())])
+        self.con.commit()
+        self.closeCon()
+
+    def getTopicsCache(self):
+        self.log.info(f"\nSqliteDatabase.getTopicsCache()")
+
+        self.openCon()
+        result = self.cur.execute("SELECT * FROM topics_cache ORDER BY date_completition DESC LIMIT 1")
+        cols = self.cur.description
+        rows = self.cur.fetchall()
+        self.closeCon()
+
+        result = self.rowsToDict(rows, cols)
+        self.log.debug(f"result: {str(result)}")
+        
+        return result
 
     def dbDateToTimestamp(self, timestamp:int):
         return datetime.fromtimestamp(timestamp)

@@ -24,3 +24,11 @@ CREATE TABLE "articles" (
 	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("id_source") REFERENCES ""
 )
+
+CREATE TABLE "topics_cache" (
+	"completition"	TEXT,
+	"num_tokens_prompt"	INTEGER,
+	"num_tokens_input"	INTEGER,
+	"num_tokens_completition"	INTEGER,
+	"date_completition"	INTEGER
+)

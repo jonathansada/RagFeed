@@ -65,6 +65,7 @@ jupyter_client==8.6.3
 jupyter_core==5.7.2
 kubernetes==33.1.0
 langchain==0.3.26
+langchain-chroma==0.2.4
 langchain-community==0.3.26
 langchain-core==0.3.66
 langchain-ollama==0.3.3
@@ -142,6 +143,7 @@ requests-toolbelt==1.0.0
 rich==14.0.0
 rpds-py==0.25.1
 rsa==4.9.1
+safetensors==0.5.3
 setuptools==78.1.1
 shellingham==1.5.4
 six==1.17.0
@@ -158,6 +160,7 @@ toml==0.10.2
 tornado==6.4.2
 tqdm==4.67.1
 traitlets==5.14.3
+transformers==4.53.0
 typer==0.16.0
 typing-inspect==0.9.0
 typing-inspection==0.4.1
