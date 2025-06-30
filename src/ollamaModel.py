@@ -62,50 +62,6 @@ class OllamaModel():
 
         return completion.content
 
-    # TODO: Delete when getTopTopics works well
-    def getTopTopics_old(self, articles):
-        self.log.info("\nOllamaModel.getTopTopics()")
-        self.log.debug("Articles: " + str(articles))
-
-        result_format = """
-            [{"topic": "[Write a headline that sumarizes the articles in the topic]",
-             "articles": [{"article": "[article headline in context related to the topic]",
-                           "link": "[article link in context]"]}]"""
-        prompt = f"""## SYSTEM ROLE
-                    You are a chatbot designed to identify and group the most relevant topics on a list of articles headlines.
-                    Your answers must be based exclusively on provided content.
-
-                    ## CONTEXT
-                    Here is the relevant content:
-                    '''
-                    {str(articles)}
-                    '''
-
-                    ## GUIDELINES
-                    1. **Accuracy**:
-                    - Only use the content in the `CONTEXT` section to answer.
-                    - Do not speculate, provide opinions or information outside of the `CONTEXT`.
-                    - Provide only links present in the `CONTEXT`.
-                    - Do not provide extra instructions.
-
-                    2. **Clarity**:
-                    - Use simple, professional, and concise language.
-                    - Avoid special characters in topic name.
-                    - Format your response in JSON.
-
-                    ## TASK
-                    1. Provide a list of the topics in the provided context
-                    2. The list must be order based on relevancy (most frequent topics first)
-                    3. Returno only a JSON without any extra comment.
-                    4. Provide the response in the following format:
-                    {result_format}
-                    """
-
-        messages = [('user', prompt)]
-        completion = self.chat.invoke(messages)
-
-        return completion.content
-
     def getTopTopics(self, articles):
         self.log.info("\nOllamaModel.getTopTopics()")
         self.log.debug("Articles: " + str(articles))
