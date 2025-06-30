@@ -7,7 +7,6 @@ if "ragfeed" in st.session_state.keys():
     sources = st.session_state.ragfeed.getSources()
     feed = st.session_state.ragfeed.getArticles()
     topics = st.session_state.ragfeed.getTopTopics()
-print(topics.keys())
 
 # Sidebar 
 with st.sidebar:
@@ -21,13 +20,11 @@ with st.sidebar:
                 st.text(f"0") #TODO: Unread
 
     st.divider()
-    
-    st.header("Trending Topics:")
-
-    with st.container(height=200, border=False):
-        sel_topic = st.pills(label="Trending Topics", label_visibility="hidden", options=topics.keys(), key="Topics", selection_mode="single") #TODO: Filter on click
-
-    st.divider()
+    if topics:
+        st.header("Trending Topics:")
+        with st.container(height=200, border=False):
+            sel_topic = st.pills(label="Trending Topics", label_visibility="collapsed", options=topics.keys(), key="top_topics", selection_mode="single")
+        st.divider()
 
     # Auto-refresh logic
     if st.session_state.refresh_interval:
@@ -53,7 +50,7 @@ with st.sidebar:
             st.rerun()
 
     if st.button("Refresh Now"):
-        ragfeed.updateSources()
+        st.session_state.ragfeed.updateSources()
         st.rerun()
 
 qp = st.query_params.to_dict()
@@ -66,18 +63,17 @@ st.title("📰 RagFeed")
 # Collect all entries
 all_entries = []
 
-if sel_topic != None:
-    print(topics[sel_topic])
-    st.header(topics[sel_topic]["topic"])
+if topics and sel_topic != None:
+    st.header(topics[sel_topic]["title"])
     st.write(topics[sel_topic]["summary"])
     for article in topics[sel_topic]["articles"]:          
         # Display entry
         st.markdown(f"""
         <div class="feed-item">
-            <div class="feed-title">TEST</div>
-            <div class="feed-date">TEST</div>
-            <div class="feed-summary">TEST</div>
-            <a href="{article}" target="_blank">Read more</a>
+            <div class="feed-title">{article["title"]}</div>
+            <div class="feed-date">{datetime.fromtimestamp(article["pub_date"]).strftime('%a, %d %b %Y %H:%M')}</div>
+            <div class="feed-summary">{article["description"][:300]}{'...' if len(article["description"]) > 300 else ''}</div>
+            <a href="{article["link"]}" target="_blank">Read more</a>
         </div>
         """, unsafe_allow_html=True)
 else:

@@ -6,7 +6,6 @@ class OllamaModel():
     def __init__(self, llm_model, embeddings_model, url, log):
         self.log = log
         self.log.info("\nOllamaModel.__init__()")
-        #num_ctx=127999
         self.chat = ChatOllama(model = llm_model, temperature =  0.8, top_p = 0.3, frequency_penalty = 0.4, presence_penalt = 0.95)
         self.llm = OllamaLLM(model = llm_model, token_max=1024, num_ctx=128000)
         self.embeddings = OllamaEmbeddings(model=embeddings_model, base_url=url)
@@ -63,6 +62,7 @@ class OllamaModel():
 
         return completion.content
 
+    # TODO: Delete when getTopTopics works well
     def getTopTopics_old(self, articles):
         self.log.info("\nOllamaModel.getTopTopics()")
         self.log.debug("Articles: " + str(articles))

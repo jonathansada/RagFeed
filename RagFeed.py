@@ -1,12 +1,14 @@
-import os
-import pathlib
 import logging
-import json
 
 # Import Settings
 from settings import *
 
-# This class controls the logic of the app and its used by the clients
+# Get RagFeedLogic
+from src.RagFeedLogic import RagFeedLogic
+
+# This class is the main controller of the app 
+# Initializes everything the app needs to work and contains the endpoint for the clients
+# To keep it clean, logic is stored in src.RagFeedLogic
 class RagFeed:
     # Initializes application based on the settings
     def __init__(self):
@@ -42,9 +44,8 @@ class RagFeed:
             self.log.error(error)
             raise NotImplementedError(error)
 
-        # Get Sources
-        from src.sources import Sources
-        self.sources = Sources(db = self.database, vs = self.vectorstore, log=self.log, update_feq = feeds_update_freq)
+        # Init RagFeedLogic
+        self.ragfeedlogic = RagFeedLogic(db = self.database, vs = self.vectorstore, model=self.model, log=self.log, update_feq = feeds_update_freq)
         
         # Update sources 
         self.updateSources()
@@ -52,9 +53,9 @@ class RagFeed:
     # Updates the rss and 
     def updateSources(self):
         self.log.info("\nRagFeed.updateSources()")
-        sourcesUpdated = self.sources.updateSources()
+        sourcesUpdated = self.ragfeedlogic.updateSources()
         if sourcesUpdated:
-            self.sources.updateVectorStore()
+            self.ragfeedlogic.updateVectorStore()
 
     def askRag(self, search, num_docs=10):
         self.log.info("\nRagFeed.askRag()")
@@ -74,25 +75,13 @@ class RagFeed:
 
         return result  
 
+    # TODO: Call it autmatically after updateSources() in an async way or through a cron
     def updateTopTopics(self):
-        articles = self.database.getTodayArticles()
-        completition, tokBasePrompt, tokInput, tolAnswer = self.model.getTopTopics([{"title": article["title"], "description": article["description"], "categories": article["categories"], "link": article["link"]} for article in articles])
-        self.database.setTopicsCache(completition, tokBasePrompt, tokInput, tolAnswer)
-
-    def hastTagFromText(self, text):
-        s = text.replace("-", " ").replace("_", " ")
-        s = s.split()
-        if len(text) == 0:
-            return text
-        return "#"+s[0] + ''.join(i.capitalize() for i in s[1:])
+        self.ragfeedlogic.updateTopTopics()
 
     def getTopTopics(self):
         self.log.info("\nRagFeed.getTopTopics()")
-        topics = self.database.getTopicsCache()
-        if len(topics) == 0:
-            return []
-
-        return {self.hastTagFromText(topic["topic"]):topic for topic in json.loads(topics[0]["completition"])}
+        return  self.ragfeedlogic.getTopTopics()
 
     def getSources(self):
         self.log.info("\nRagFeed.getSources()")

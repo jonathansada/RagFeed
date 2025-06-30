@@ -110,11 +110,19 @@ class SqliteDatabase:
         if closedb:
             self.closeCon()
 
-    def getArticles(self):
+    def getArticles(self, url=False):
         self.log.info(f"\nSqliteDatabase.getArticles()")
+        self.log.debug(f"url{url}")
+
+        sql = "SELECT * FROM articles "
+        params = []
+        if url != False:
+            sql += " WHERE link = ? "
+            params.append(url)
+        sql += " ORDER BY pub_date ASC"
 
         self.openCon()
-        result = self.cur.execute("SELECT * FROM articles ORDER BY pub_date ASC")
+        result = self.cur.execute(sql, params)
         cols = self.cur.description
         rows = self.cur.fetchall()
         self.closeCon()
@@ -128,7 +136,6 @@ class SqliteDatabase:
         self.log.info(f"\nSqliteDatabase.getTodayArticles()")
 
         self.openCon()
-        print(f"SELECT * FROM articles WHERE pub_date>={self.timestampToDbData(datetime.now() + timedelta(hours=-24))} ORDER BY pub_date ASC")
         result = self.cur.execute("SELECT * FROM articles WHERE pub_date>=? ORDER BY pub_date ASC", [self.timestampToDbData(datetime.now() + timedelta(hours=-24))])
         cols = self.cur.description
         rows = self.cur.fetchall()
