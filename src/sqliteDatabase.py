@@ -112,14 +112,14 @@ class SqliteDatabase:
 
     def getArticles(self, url=False):
         self.log.info(f"\nSqliteDatabase.getArticles()")
-        self.log.debug(f"url{url}")
+        self.log.debug(f"url: {url}")
 
         sql = "SELECT * FROM articles "
         params = []
         if url != False:
             sql += " WHERE link = ? "
             params.append(url)
-        sql += " ORDER BY pub_date ASC"
+        sql += " ORDER BY pub_date DESC"
 
         self.openCon()
         result = self.cur.execute(sql, params)
@@ -146,13 +146,13 @@ class SqliteDatabase:
         
         return result
 
-    def setTopicsCache(self, completition, numTokensPrompt, numTokensInput, numTokensCompletition):
+    def setTopicsCache(self, completion, numTokensPrompt, numTokensInput, numTokensCompletion):
         self.log.info(f"\nSqliteDatabase.setTopicsCache()")
-        self.log.debug(f"completition={completition}, numTokensPrompt={numTokensPrompt}, numTokensInput={numTokensInput}, numTokensCompletition={numTokensCompletition}")
+        self.log.debug(f"completion={completion}, numTokensPrompt={numTokensPrompt}, numTokensInput={numTokensInput}, numTokensCompletion={numTokensCompletion}")
 
         self.openCon()
-        self.cur.execute("INSERT INTO topics_cache (completition, num_tokens_prompt, num_tokens_input, num_tokens_completition, date_completition) values (?, ?, ?, ?, ?)",
-                         [completition, numTokensPrompt, numTokensInput, numTokensCompletition, self.timestampToDbData(datetime.now())])
+        self.cur.execute("INSERT INTO topics_cache (completion, num_tokens_prompt, num_tokens_input, num_tokens_completition, date_completition) values (?, ?, ?, ?, ?)",
+                         [completion, numTokensPrompt, numTokensInput, numTokensCompletion, self.timestampToDbData(datetime.now())])
         self.con.commit()
         self.closeCon()
 
@@ -169,6 +169,54 @@ class SqliteDatabase:
         self.log.debug(f"result: {str(result)}")
         
         return result
+
+    def setRagSearchCache(self, search, completion, numTokensPrompt, numTokensInput, numTokensCompletion):
+        self.log.info(f"\nSqliteDatabase.setRagSearchCache()")
+        self.log.debug(f"search={search}, completion={completion}, numTokensPrompt={numTokensPrompt}, numTokensInput={numTokensInput}, numTokensCompletion={numTokensCompletion}")
+
+        self.openCon()
+        result = self.cur.execute("SELECT * FROM ragsearch_cache WHERE search=?", [search])
+        rows = self.cur.fetchall()
+        if not rows:
+            sql = "INSERT INTO ragsearch_cache (completion, num_tokens_prompt, num_tokens_input, num_tokens_completition, date_completition, search) values (?, ?, ?, ?, ?, ?)"
+        else:
+            sql = "UPDATE ragsearch_cache SET completion = ?, num_tokens_prompt = ? , num_tokens_input = ?, num_tokens_completition = ?, date_completition = ? WHERE search = ?"
+        self.cur.execute(sql, [completion, numTokensPrompt, numTokensInput, numTokensCompletion, self.timestampToDbData(datetime.now()), search])
+        self.con.commit()
+        self.closeCon()
+
+    def getRagSearchCache(self, search = False):
+        self.log.info(f"\nSqliteDatabase.setRagSearchCache()")
+        self.log.debug(f"search={str(search)}")
+
+        sql = "SELECT * FROM ragsearch_cache "
+        params = []
+        if search:
+            sql += " WHERE search = ? "
+            params.append(search)
+        sql += " ORDER BY date_completition DESC"
+
+        self.openCon()
+        result = self.cur.execute(sql, params)
+        cols = self.cur.description
+        rows = self.cur.fetchall()
+        self.closeCon()
+
+        result = self.rowsToDict(rows, cols)
+        self.log.debug(f"result: {str(result)}")
+        
+        return result
+
+    def delRagSearch(self, search):
+        self.log.info(f"\nSqliteDatabase.delRagSearch()")
+        self.log.debug(f"search={str(search)}")
+
+        sql = "DELETE FROM ragsearch_cache  WHERE search = ? "
+
+        self.openCon()
+        result = self.cur.execute(sql, [search])
+        self.con.commit()
+        self.closeCon()
 
     def dbDateToTimestamp(self, timestamp:int):
         return datetime.fromtimestamp(timestamp)

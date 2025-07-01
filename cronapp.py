@@ -1,6 +1,4 @@
 from RagFeed import RagFeed
 app = RagFeed()
 
-app.updateSources()
-app.updateTopTopics()
-
+app.cronJob(force=True)

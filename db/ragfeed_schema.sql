@@ -26,7 +26,16 @@ CREATE TABLE "articles" (
 )
 
 CREATE TABLE "topics_cache" (
-	"completition"	TEXT,
+	"completion"	TEXT,
+	"num_tokens_prompt"	INTEGER,
+	"num_tokens_input"	INTEGER,
+	"num_tokens_completition"	INTEGER,
+	"date_completition"	INTEGER
+)
+
+CREATE TABLE "ragsearch_cache" (
+	"search"	TEXT,
+	"completion"	TEXT,
 	"num_tokens_prompt"	INTEGER,
 	"num_tokens_input"	INTEGER,
 	"num_tokens_completition"	INTEGER,

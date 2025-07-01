@@ -2,6 +2,7 @@ import streamlit as st
 from datetime import datetime
 import time
 
+# Get Content from backend
 sources = feed = topics = []
 if "ragfeed" in st.session_state.keys():
     sources = st.session_state.ragfeed.getSources()
@@ -57,12 +58,10 @@ qp = st.query_params.to_dict()
 if qp:
     st.text(qp['tab'])
 
-# App title
-st.title("📰 RagFeed")
+# Section Title
+st.title(":material/newspaper: Rss Feed")
 
-# Collect all entries
-all_entries = []
-
+# List Topics
 if topics and sel_topic != None:
     st.header(topics[sel_topic]["title"])
     st.write(topics[sel_topic]["summary"])

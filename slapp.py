@@ -13,7 +13,7 @@ if "refresh_interval" not in st.session_state.keys():
 
 # Set page config
 st.set_page_config(
-    page_title="RSS Feed Reader",
+    page_title="RagFeed",
     page_icon="📰",
     layout="wide"
 )
@@ -49,16 +49,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
-
-
-def settings():
-    st.title("settings")
-
-
 pg = st.navigation([
-    st.Page("./slapp/feed.py", title="First page", icon="🔥"),
-    st.Page("./slapp/rag.py", title="Chat", icon=":material/favorite:"),
-    st.Page("./slapp/settings.py", title="Settings", icon=":material/favorite:"),
+    st.Page("./slapp/feed.py", title="RSS Feed", icon=":material/newspaper:"),
+    st.Page("./slapp/rag.py", title="Ask Feed", icon=":material/contact_support:"),
+    st.Page("./slapp/settings.py", title="Settings", icon=":material/settings:"),
 ])
 pg.run()

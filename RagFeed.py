@@ -16,13 +16,14 @@ class RagFeed:
         self.log = logging.getLogger(logger_path)
         self.log.setLevel(logger_level)
         self.log.addHandler(logging.FileHandler(logger_path, 'w'))
+        self.log.info("\n\n===================== RagFit Init ===================== \n")
 
         # Initialize DB
         if database_engine == "sqlite":
             from src.sqliteDatabase import SqliteDatabase
             self.database = SqliteDatabase(sqlite_path, log=self.log)
         else:
-            error = f"database_engine '{database_engine}' is not implemented"
+            error = f"RagFeed.__init__: database_engine '{database_engine}' is not implemented"
             self.log.error(error)
             raise NotImplementedError(error)
 
@@ -31,7 +32,7 @@ class RagFeed:
             from src.ollamaModel import OllamaModel
             self.model = OllamaModel(llm_model = ollama_llm, embeddings_model = ollama_embeddings, url = ollama_url, log = self.log)
         else:
-            error = f"model_source '{model_source}' is not implemented"
+            error = f"RagFeed.__init__: model_source '{model_source}' is not implemented"
             self.log.error(error)
             raise NotImplementedError(error)
 
@@ -40,7 +41,7 @@ class RagFeed:
             from src.chromaVectorStore import ChromaVectorStore
             self.vectorstore = ChromaVectorStore(embeddings=self.model.embeddings, collection_name=chromadb_collection, persist_directory=chromadb_path, log=self.log)
         else:
-            error = f"database_engine '{vector_db}' is not implemented"
+            error = f"RagFeed.__init__: database_engine '{vector_db}' is not implemented"
             self.log.error(error)
             raise NotImplementedError(error)
 
@@ -56,28 +57,28 @@ class RagFeed:
         sourcesUpdated = self.ragfeedlogic.updateSources()
         if sourcesUpdated:
             self.ragfeedlogic.updateVectorStore()
+            return True
+        return False
 
-    def askRag(self, search, num_docs=10):
+    def cronJob(self, force=False):
+        # Update sources 
+        if self.updateSources() or force==True:
+            # Update Top Topics
+            self.ragfeedlogic.updateTopTopics()
+            # Update Saved Searches
+            self.ragfeedlogic.updateRagSearches(num_docs=50) # Take more docs during cron work for more content.
+            
+    def askRag(self, search):
         self.log.info("\nRagFeed.askRag()")
+        return self.ragfeedlogic.askRag(search, num_docs=10) # Do not take much docs for a Fast Inference
 
-        # Get docs from vectorstore
-        docs = self.vectorstore.search(search, k = num_docs)
-        
-        # Prepare contextx
-        context = ""
-        for doc in docs:
-            context += "\nContent:\n"
-            context += doc.page_content + "\n"
-            context += str(doc.metadata) +"\n\n"
+    def getRagSearches(self, search=False):
+        self.log.info("\nRagFeed.getRagSearches()")
+        return self.ragfeedlogic.getRagSearches()
 
-        # Ask the model to perform the inference
-        result = self.model.summarizeArticles(question=search, context=context)
-
-        return result  
-
-    # TODO: Call it autmatically after updateSources() in an async way or through a cron
-    def updateTopTopics(self):
-        self.ragfeedlogic.updateTopTopics()
+    def delRagSearch(self, search):
+        self.log.info("\nRagFeed.delRagSearches()")
+        return self.database.delRagSearch(search)
 
     def getTopTopics(self):
         self.log.info("\nRagFeed.getTopTopics()")

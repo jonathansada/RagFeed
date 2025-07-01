@@ -34,7 +34,7 @@ class RagFeedLogic:
                     self.db.setSourceLastUpdate(source = source["id"])
                     updated.append(source)
                 else:
-                    self.log.warning(f"Soruce {source["title"]}({source["link"]}) answered with a HTTP Code {response.status_code} and this reason: {response.reason}")
+                    self.log.warning(f"RagFeedLogic.updateSources: Soruce {source["title"]}({source["link"]}) answered with a HTTP Code {response.status_code} and this reason: {response.reason}")
 
         return updated
     
@@ -79,25 +79,28 @@ class RagFeedLogic:
             for art_id in res:
                 self.db.setArticleInVectorStore(article_id=art_id, closedb=False)
             self.db.closeCon()
-
+    
     def updateTopTopics(self):
         self.log.info("\nRagFeedLogic.updateTopTopics()")
 
         articles = self.db.getTodayArticles()
-        completition, tokBasePrompt, tokInput, tolAnswer = self.model.getTopTopics([{"title": article["title"], "description": article["description"], "categories": article["categories"], "link": article["link"]} for article in articles])
-        self.log.debug("\nRagFeedLogic.updateTopTopics()")
-        # Transform completition in the format that will be used 
+        completion, tokBasePrompt, tokInput, tolAnswer = self.model.getTopTopics([{"title": article["title"], "description": article["description"], "categories": article["categories"], "link": article["link"]} for article in articles])
+        self.log.debug(completion)
+        # Transform completion in the format that will be used 
         toptopics = {}
         
-        try:
-            for topic in json.loads(completition):
+        try: # Just in case answer is not formater properlly
+            for topic in json.loads(completion):
                 rtopic = {}
                 freq = 0
                 rtopic["title"] = topic["topic"]
                 rtopic["summary"] = topic["summary"]
                 rarticles = []
                 for article in topic["articles"]:
-                    ra = self.db.getArticles(url=article)
+                    url = article
+                    if isinstance(article, dict):
+                        url = article["url"] if "url" in article.keys() else article["link"] if "link" in article.keys() else url
+                    ra = self.db.getArticles(url=url)
                     if ra:
                         rarticles.append(ra[0])
                         freq += 1
@@ -109,8 +112,10 @@ class RagFeedLogic:
             # Sort by frequency
             toptopics = {k: v for k, v in sorted(toptopics.items(), key=lambda item: item[1]['frequency'], reverse="True")}
             self.log.debug(f"topTopics: {str(toptopics)}")
-        except:
-            self.log.error("Unable to transform model completition into json:\n" + str(completition))
+        except Exception as e:
+            self.log.error("\nRagFeedLogic.updateTopTopics()")
+            self.log.error("Error:\n" + getattr(e, 'message', str(e)))
+            self.log.error("Unable to transform model completion into json:\n" + str(completion))
             toptopics = {}
 
         # If toptopics is empty this will not be stored in DB
@@ -125,7 +130,7 @@ class RagFeedLogic:
         if not topics:
             return {}
 
-        return json.loads(topics[0]["completition"])
+        return json.loads(topics[0]["completion"])
 
     def hastTagFromText(self, text):
         s = text.replace("-", " ").replace("_", " ")
@@ -134,6 +139,60 @@ class RagFeedLogic:
             return text
         return "#"+s[0] + ''.join(i.capitalize() for i in s[1:])
 
+    def askRag(self, search, num_docs=10):
+        self.log.info("\nRagFeedLogic.askRag()")
+
+        # Get docs from vectorstore
+        docs = self.vs.search(search, k = num_docs)
+        
+        # Prepare contextx
+        context = ""
+        for doc in docs:
+            context += "\nContent:\n"
+            context += doc.page_content + "\n"
+            context += str(doc.metadata) +"\n\n"
+
+        # Ask the model to perform the inference
+        completion, tokBasePrompt, tokInput, tolAnswer = self.model.summarizeArticles(question=search, context=context)
+        self.log.debug(completion)
+
+        try:
+            raganswer = json.loads(completion)
+            raganswer["title"] = search
+
+            rarticles = []
+            for article in raganswer["articles"]:
+                url = article
+                if isinstance(article, dict):
+                    url = article["url"] if "url" in article.keys() else article["link"] if "link" in article.keys() else url
+                ra = self.db.getArticles(url=url)
+                if ra:
+                    rarticles.append(ra[0])
+            raganswer["articles"] = rarticles
+
+            self.db.setRagSearchCache(search, json.dumps(raganswer), tokBasePrompt, tokInput, tolAnswer)
+        
+        except Exception as e:
+            raganswer = {}
+            self.log.error("\nRagFeedLogic.askRag()")
+            self.log.error("Error:" + getattr(e, 'message', str(e)))
+            self.log.error("Unable to transform model completion into json:\n" + str(completion))
+
+        return raganswer  
+
+    def getRagSearches(self, search=False):
+        self.log.info("\nRagFeedLogic.getRagSearches()")
+        searches = self.db.getRagSearchCache(search)
+        if not searches:
+            return []
+
+        return [json.loads(search["completion"]) for search in searches]
+
+    def updateRagSearches(self, num_docs=10):
+        ragsearches = self.getRagSearches()
+        for rsearch in ragsearches:
+            self.askRag(rsearch["title"], num_docs=num_docs)
+    
     def getHoursLastUpdate(self, last_update:datetime):
         return (datetime.now() - last_update).total_seconds() // 3600
 
