@@ -2,11 +2,8 @@ import requests
 from datetime import datetime
 import re
 import json
-
 from src.rssArticlesLoader import RssArticlesLoader
-
 from langchain_core.documents import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 # Contains the main logic of the app including Sources, Database, Models and VectorStore
 class RagFeedLogic:
