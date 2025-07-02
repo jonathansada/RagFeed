@@ -52,9 +52,9 @@ class RagFeed:
         self.updateSources()
 
     # Updates the rss and 
-    def updateSources(self):
+    def updateSources(self, force=False):
         self.log.info("\nRagFeed.updateSources()")
-        sourcesUpdated = self.ragfeedlogic.updateSources()
+        sourcesUpdated = self.ragfeedlogic.updateSources(force)
         if sourcesUpdated:
             self.ragfeedlogic.updateVectorStore()
             return True
@@ -62,11 +62,16 @@ class RagFeed:
 
     def cronJob(self, force=False):
         # Update sources 
-        if self.updateSources() or force==True:
-            # Update Top Topics
-            self.ragfeedlogic.updateTopTopics()
-            # Update Saved Searches
-            self.ragfeedlogic.updateRagSearches(num_docs=50) # Take more docs during cron work for more content.
+        try:
+            if self.updateSources(force) or force==True:
+                # Update Top Topics
+                self.ragfeedlogic.updateTopTopics()
+                # Update Saved Searches
+                self.ragfeedlogic.updateRagSearches(num_docs=50) # Take more docs during cron work for more content.
+            return "OK"
+        except Exception as e:
+            self.log.error("RagFeed.cronJob" + getattr(e, 'message', str(e)))
+            return "KO"
             
     def askRag(self, search):
         self.log.info("\nRagFeed.askRag()")

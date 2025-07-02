@@ -20,12 +20,12 @@ class RagFeedLogic:
     def getSources(self):
         return self.db.getSources()
     
-    def updateSources(self):
+    def updateSources(self, force=False):
         self.log.info("\nRagFeedLogic.updateArticles()")
         sources = self.getSources()
         updated = []
         for source in sources:
-            if self.getHoursLastUpdate(source["last_update"]) > self.update_feq:
+            if self.getHoursLastUpdate(source["last_update"]) > self.update_feq or force==True:
                 self.log.debug(f"Updating source {source["title"]}")
                 response = requests.get(source["url"])
 
