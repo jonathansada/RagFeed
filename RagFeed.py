@@ -51,7 +51,8 @@ class RagFeed:
         # Update sources 
         self.updateSources()
 
-    # Updates the rss and 
+    # Updates the rss and vectorstore
+    # TODO Integrate this code in the cron
     def updateSources(self, force=False):
         self.log.info("\nRagFeed.updateSources()")
         sourcesUpdated = self.ragfeedlogic.updateSources(force)
@@ -60,6 +61,7 @@ class RagFeed:
             return True
         return False
 
+    # TODO It would be nice to be able to run this async and not need a specific cron process running apart
     def cronJob(self, force=False):
         # Update sources 
         try:

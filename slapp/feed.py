@@ -18,7 +18,7 @@ with st.sidebar:
             with col1:
                 st.text(f"{source["title"]}") #TODO: Filter on click
             with col2:
-                st.text(f"0") #TODO: Unread
+                st.text(f"-") #TODO: Unread
 
     st.divider()
     if topics:

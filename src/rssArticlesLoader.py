@@ -3,29 +3,6 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 
 class RssArticlesLoader:
-    def loadAsDocuments(self, xml_file):
-        with open(xml_file) as f:
-            soup = BeautifulSoup(f, 'xml')
-
-        docs = []         
-        for item in soup.find_all('item'):
-            metadata = {}
-            metadata["url"] = item.link.text
-            if item.creator:
-                metadata["creator"] = item.creator.text
-            if item.pubDate:
-                metadata["publication"] = item.pubDate.text
-            if item.category:
-                metadata["categories"] = ", ".join([cat.text for cat in item.find_all('category')])
-            if item.credit:
-                metadata["credit"] = item.credit.text
-
-            docs.append(Document(
-                page_content=f"{item.title.text}\n{"\n".join([desc.text for desc in item.find_all('description')])}",
-                metadata=metadata
-            ))
-        return docs
-    
     def loadAsDict(self, xml):
         soup = BeautifulSoup(xml, 'xml')
         articles = []  
@@ -51,9 +28,14 @@ class RssArticlesLoader:
             article["categories"] = self.cleanCategories(item.find_all('category')) if item.category else []
             article["media_url"] = item.find('media:content').attrs["url"] if item.find('media:content', url=True) else False
             article["media_medium"] = item.find('media:content').attrs["medium"] if item.find('media:content', medium=True) else False
-            article["media_height"] = item.find('media:content').attrs["media_height"] if item.find('media:content', media_height=True) else False
+            article["media_height"] = item.find('media:content').attrs["height"] if item.find('media:content', media_height=True) else False
             article["media_credit"] = item.find('media:credit').text if item.find('media:credit') else False
+            if item.find('media:thumbnail') and article["media_url"]==False:
+                article["media_url"] = item.find('media:thumbnail').attrs["url"] if item.find('media:thumbnail', url=True) else False
+                article["media_height"] = item.find('media:thumbnail').attrs["height"] if item.find('media:thumbnail', height=True) else False
             article["media_description"] = item.find('media:description').text if item.find('media:description') else False
+            if item.find('media:keywords'):
+                article["media_description"] = article["media_description"] + " " + item.find('media:keywords').text if article["media_description"] else item.find('media:keywords').text
             articles.append(article)
         
         return articles
