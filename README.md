@@ -2,11 +2,11 @@
 
 RagFeed is a feed reader powered by RAG and LLM models.
 
-The main feature are:
+### Main features:
 - **Trending Topics**: Provide an overview of the most relevant topics based the articles provided by the RSS sources added by the user. 
 - **Ask Feed**: Allow the user to ask for specific topics and get an orview of them and the most relevant related articles.
 
-## Next Features:
+### Next Features:
 - Improve RSS parse algorithm.
 - Source management flow.
 - Allow to mark articles as Read/Undead.
