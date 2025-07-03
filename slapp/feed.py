@@ -59,7 +59,7 @@ if qp:
     st.text(qp['tab'])
 
 # Section Title
-st.title(":material/newspaper: Rss Feed")
+st.title(":material/newspaper: RSS Feed")
 
 # List Topics
 if topics and sel_topic != None:

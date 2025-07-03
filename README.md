@@ -76,6 +76,9 @@ The file `settings.py` contains some settings to modify RagFeed behaviour:
 - `ollama_llm`: LLM model to be used by Ollama
 - `ollama_embeddings`: Embedder model to be use by Ollama.
 
+## App Schema
+![RagFeed main methods schema](./docs/img/ragfeed_schema.png "RagFeed - Schema")
+
 ## Providers Modularity
 Currently RagFeed is implemented to be used with Ollama, SQLite and Chroma DB but the code has been done considering the posibility of implement alternative sources.
 
