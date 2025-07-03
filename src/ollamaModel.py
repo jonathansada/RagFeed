@@ -95,7 +95,9 @@ class OllamaModel():
                     ## GUIDELINES
                     1. **Accuracy**:
                     - Only use the content in the `CONTEXT` section to answer.
-                    - Must avoid generic topic like 'Politics', 'Technology', 'Sports', 'Entretainment', 'Business', etc.. and combinations of them (eg. 'Education And Research')
+                    - Topic must be between 1 and 4 words.
+                    - Must avoid generic topic like 'Politics', 'Technology', 'Sports', 'Entretainment', 'Business', etc..
+                    - Avoid word "and" in the topic.
                     - All provided links must appear in the result.
                     - Do not provide topics without related articles.
                     - Do not duplicate topics but group articles links with similar topic.
@@ -173,7 +175,7 @@ class OllamaModel():
         numTokInput = self.llm.get_num_tokens(str(json))
         self.log.info("Num Tokens in Input: " + str(numTokInput))
         numTokPrompt = self.llm.get_num_tokens(str(prompt))
-        self.log.info("Num Tokens in Prompt: " + str(numTokPrompt))
+        self.log.info("Num Tokens in Prompt: " + str(numTokPrompt - numTokInput))
 
         self.log.debug("= PROMPT =================\n" + str(prompt) + "\n= END PROMPT =================")
         completion = self.llm.invoke(prompt)
@@ -182,4 +184,4 @@ class OllamaModel():
         numTokCompletion = self.llm.get_num_tokens(completion)
         self.log.info("Num Tokens in Answer: " + str(numTokCompletion))
 
-        return completion, numTokPrompt - numTokInput, numTokInput, numTokCompletion
+        return completion, numTokPrompt, numTokInput, numTokCompletion
