@@ -20,8 +20,4 @@ for source in sources:
     with col1:
         st.text(f"{source["title"]}") #TODO: Filter on click
     with col2:
-        st.text(f"0") #TODO: Unread
-
-# Refresh interval
-st.subheader("Refresh Interval")
-st.session_state.refresh_interval = st.slider("Auto-refresh interval (minutes)",  min_value=5, max_value=60, value=15, step=5)
+        st.text(f"-") #TODO: Unread

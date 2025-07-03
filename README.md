@@ -2,9 +2,20 @@
 
 RagFeed is a feed reader powered by RAG and LLM models.
 
-The main feature is to provide an overview of the most relevant topics on the articles from the RSS sources provided by the user and allow them to ask for specific topics and get an orview and the most relevant related articles.
+The main feature are:
+- **Trending Topics**: Provide an overview of the most relevant topics based the articles provided by the RSS sources added by the user. 
+- **Ask Feed**: Allow the user to ask for specific topics and get an orview of them and the most relevant related articles.
 
-Other posible features (future) are to allow the user to rate specific articles in grade of interest so the app could filter the most relevant topics based on preferences and create a custom feed, similar to the one provided by social networks but based on the user provided RSS sources.
+## Next Features:
+- Improve RSS parse algorithm.
+- Source management flow.
+- Allow to mark articles as Read/Undead.
+- Allow to rate articles interest.
+- Internal reader.
+- Article recomendation algorithm.
+- Presonalized feed.
+- Improve app look and feel.
+- ...
 
 ## Preview
 ### RSS Feed view
@@ -23,6 +34,11 @@ Other posible features (future) are to allow the user to rate specific articles 
 - Python dependencies in `requirements.txt` installed (recomended to use a virtual environment)
 
 **Note**: Default ollama url, model and embedder used can be edited on `settings.py`
+
+## Current limitations
+- Sources must be added directly on the database.
+- The app must be used in Dark Mode. 
+- Settings page is a placeholder.
 
 ## How to run
 1. Clone repository

@@ -4,6 +4,7 @@ import time
 
 # Get Content from backend
 sources = feed = topics = []
+sel_topic = None
 if "ragfeed" in st.session_state.keys():
     sources = st.session_state.ragfeed.getSources()
     feed = st.session_state.ragfeed.getArticles()
@@ -12,7 +13,7 @@ if "ragfeed" in st.session_state.keys():
 # Sidebar 
 with st.sidebar:
     st.header("Sources:")
-    with st.container(height=200, border=False):
+    with st.container(height=250, border=False):
         for source in sources:
             col1, col2 = st.columns([3, 1])
             with col1:
@@ -23,36 +24,8 @@ with st.sidebar:
     st.divider()
     if topics:
         st.header("Trending Topics:")
-        with st.container(height=200, border=False):
+        with st.container(height=250, border=False):
             sel_topic = st.pills(label="Trending Topics", label_visibility="collapsed", options=topics.keys(), key="top_topics", selection_mode="single")
-        st.divider()
-
-    # Auto-refresh logic
-    if st.session_state.refresh_interval:
-        refresh_sec = st.session_state.refresh_interval * 60
-               
-        # Add a placeholder for the countdown
-        countdown = st.empty()
-        
-        # Display time until next refresh
-        if 'last_refresh' not in st.session_state:
-            st.session_state.last_refresh = time.time()
-        
-        elapsed = time.time() - st.session_state.last_refresh
-        remaining = max(0, refresh_sec - elapsed)
-        
-        # Update countdown
-        with countdown:
-            st.text(f"Next refresh in: {int(remaining // 60)}m {int(remaining % 60)}s")
-            
-        # Check if it's time to refresh
-        if elapsed >= refresh_sec:
-            st.session_state.last_refresh = time.time()
-            st.rerun()
-
-    if st.button("Refresh Now"):
-        st.session_state.ragfeed.updateSources()
-        st.rerun()
 
 qp = st.query_params.to_dict()
 if qp:
