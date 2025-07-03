@@ -1,6 +1,6 @@
 # Logger
 logger_path = "./log/ragfeed.log"
-logger_level = 10 # DEBUG = 10, INFO = 20, WARNING = 30
+logger_level = 30 # DEBUG = 10, INFO = 20, WARNING = 30
 # All levels in https://docs.python.org/3/library/logging.html#logging-levels
 
 # Feeds
