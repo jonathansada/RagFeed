@@ -136,7 +136,7 @@ class SqliteDatabase:
         self.log.info(f"\nSqliteDatabase.getTodayArticles()")
 
         self.openCon()
-        result = self.cur.execute("SELECT * FROM articles WHERE pub_date>=? ORDER BY pub_date ASC", [self.timestampToDbData(datetime.now() + timedelta(hours=-24))])
+        result = self.cur.execute("SELECT * FROM articles WHERE pub_date>=? ORDER BY pub_date DESC", [self.timestampToDbData(datetime.now() + timedelta(hours=-24))])
         cols = self.cur.description
         rows = self.cur.fetchall()
         self.closeCon()

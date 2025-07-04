@@ -87,6 +87,11 @@ class RagFeedLogic:
         toptopics = {}
         
         try: # Just in case answer is not formater properlly
+            # Check there is no markdown indicator for json
+            completion = completion.strip()
+            completion = re.sub(r'^(```json)', '', completion)
+            completion = re.sub(r'(```$)', '', completion)
+            
             for topic in json.loads(completion):
                 rtopic = {}
                 freq = 0
@@ -152,8 +157,12 @@ class RagFeedLogic:
         # Ask the model to perform the inference
         completion, tokBasePrompt, tokInput, tolAnswer = self.model.summarizeArticles(question=search, context=context)
         self.log.debug(completion)
-
         try:
+            # Check there is no markdown indicator for json
+            completion = completion.strip()
+            completion = re.sub(r'^(```json)', '', completion)
+            completion = re.sub(r'(```$)', '', completion)
+
             raganswer = json.loads(completion)
             raganswer["title"] = search
 
