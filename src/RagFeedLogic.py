@@ -31,7 +31,7 @@ class RagFeedLogic:
                     self.db.setSourceLastUpdate(source = source["id"])
                     updated.append(source)
                 else:
-                    self.log.warning(f"RagFeedLogic.updateSources: Soruce {source["title"]}({source["link"]}) answered with a HTTP Code {response.status_code} and this reason: {response.reason}")
+                    self.log.warning(f"RagFeedLogic.updateSources: Soruce {source["title"]}({source["url"]}) answered with a HTTP Code {response.status_code} and this reason: {response.reason}")
 
         return updated
     
